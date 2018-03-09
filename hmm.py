@@ -37,7 +37,7 @@ class HMM(object):
       [1, self._num_states], dtype=np.float64)/self._num_states
     self._tp = np.ones([self._num_states, self._num_states],
                        dtype=np.float64)/self._num_states'''
-    self._p0, self._tp = self._init_p0_tp(self._hmm_type)
+    self._p0, self._tp = self._init_p0_tp()
     self._mu = np.random.rand(self._num_states, self._data_dim)
     self._sigma = np.array(
       [np.identity(self._data_dim, dtype=np.float64)] * self._num_states)
@@ -131,7 +131,7 @@ class HMM(object):
         [1, self._num_states], dtype=np.float64)/self._num_states
       self._tp = np.ones([self._num_states, self._num_states],
                          dtype=np.float64)/self._num_states'''
-      self._p0, self._tp = self._init_p0_tp(self._hmm_type)
+      self._p0, self._tp = self._init_p0_tp()
       self._sigma = np.array(
         [np.identity(self._data_dim, dtype=np.float64)] * self._num_states)
       with tf.Session(graph=self._graph) as sess:
