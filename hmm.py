@@ -511,9 +511,9 @@ class HMM(object):
     tp = np.ones([self._num_states, self._num_states], dtype=np.float64) / self._num_states
     p0 = np.ones([1, self._num_states], dtype=np.float64) / self._num_states
     if self._hmm_type == 'left-to-right' or self._hmm_type == 'left-to-right-to-first':
-      p0[0, 0] = 1.0
+      p0[0, 0] = 0.9
       for i in range(1, self._num_states):
-        p0[0, i] = 0.0
+        p0[0, i] = 0.1/(self._num_states - 1.0)
         for j in range(i):
           tp[i, j] = 0.0
         for j in range(i, self._num_states):
