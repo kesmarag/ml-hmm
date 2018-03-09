@@ -12,7 +12,7 @@ from tensorflow.contrib.distributions import MultivariateNormalFullCovariance
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
-class GaussianHMM(object):
+class HMM(object):
   """A Hidden Markov Models class with Gaussians emission distributions.
   """
 
