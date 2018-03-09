@@ -374,7 +374,7 @@ class HMM(object):
       self._cum_tp_tf = tf.cumsum(self._tp_tf, axis=1)
       # initial sample
       _init_sample_state = tf.expand_dims(
-        tf.where(tf.squeeze(self._cum_p0_tf > self._rand[0]))[0], 0)
+        tf.where(tf.squeeze(self._cum_p0_tf >= self._rand[0]))[0], 0)
       _init_sample = tf.expand_dims(self._em_probs.sample()[tf.cast(
         _init_sample_state[0, 0], dtype='int32')], 0)
       i0 = tf.constant(1, dtype='int32')
@@ -421,7 +421,7 @@ class HMM(object):
       # print('gamma_mv shape : ', gamma_mv.get_shape())
       xi_mv = tf.reduce_mean(self._xi, axis=1, name='xi_mv')
       # update the initial state probabilities
-      self._p0_tf_new = self._p0_tf #  tf.transpose(tf.expand_dims(gamma_mv[0], -1))
+      self._p0_tf_new = tf.transpose(tf.expand_dims(gamma_mv[0], -1))
       # update the transition matrix
       # first calculate sum_n=2^{N} xi_mean[n-1,k , n,l]
       sum_xi_mean = tf.squeeze(tf.reduce_sum(xi_mv, axis=0))
