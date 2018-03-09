@@ -1,14 +1,14 @@
-<h1 id="kesmarag.ml.HMM">GaussianHMM</h1>
+<h1 id="kesmarag.ml.HMM">HMM</h1>
 
 ```python
-GaussianHMM(self, num_states, data_dim)
+HMM(self, num_states, data_dim)
 ```
 A Hidden Markov Models class with Gaussians emission distributions.
 
 <h2 id="kesmarag.ml.HMM.fit">fit</h2>
 
 ```python
-GaussianHMM.fit(self, data, max_steps=100, batch_size=None, TOL=0.01, min_var=0.1, num_runs=1)
+HMM.fit(self, data, max_steps=100, batch_size=None, TOL=0.01, min_var=0.1, num_runs=1)
 ```
 Implements the Baum-Welch algorithm.
 
@@ -25,7 +25,7 @@ Implements the Baum-Welch algorithm.
 <h2 id="kesmarag.ml.HMM.posterior">posterior</h2>
 
 ```python
-GaussianHMM.posterior(self, data)
+HMM.posterior(self, data)
 ```
 Runs the forward-backward algorithm in order to calculate
        the log-scale posterior probabilities.
@@ -41,7 +41,7 @@ Runs the forward-backward algorithm in order to calculate
 <h2 id="kesmarag.ml.HMM.run_viterbi">run_viterbi</h2>
 
 ```python
-GaussianHMM.run_viterbi(self, data)
+HMM.run_viterbi(self, data)
 ```
 Implements the viterbi algorithm. 
     (I am not sure that it works properly)
@@ -56,7 +56,7 @@ Implements the viterbi algorithm.
 <h2 id="kesmarag.ml.HMM.generate">generate</h2>
 
 ```python
-GaussianHMM.generate(self, num_samples)
+HMM.generate(self, num_samples)
 ```
 Generate simulated data from the model.
 
