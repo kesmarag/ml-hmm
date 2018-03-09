@@ -113,7 +113,7 @@ class HMM(object):
       True if converged, False otherwise.
 
     """
-    post_max = -1000000
+    post_max = -1000000000
     tic = time.time()
     KMEANS_NUM = 100
     dataset = DataSet(data)
@@ -508,7 +508,7 @@ class HMM(object):
     return np.all(np.linalg.eigvals(sigma) > 0.02)
 
   def _init_p0_tp(self):
-    tp = np.zeros([self._num_states, self._num_states], dtype=np.float64) / self._num_states
+    tp = np.ones([self._num_states, self._num_states], dtype=np.float64) / self._num_states
     p0 = np.ones([1, self._num_states], dtype=np.float64) / self._num_states
     if self._hmm_type == 'left-to-right' or self._hmm_type == 'left-to-right-to-first':
       p0[0, 0] = 1.0
