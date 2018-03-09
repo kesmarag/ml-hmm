@@ -516,8 +516,12 @@ class HMM(object):
         p0[0, i] = 0.0  # 0.1/(self._num_states - 1.0)
         for j in range(i):
           tp[i, j] = 0.0
-        for j in range(i, self._num_states):
-          tp[i, j] = 1.0 / (self._num_states - i)
+        tp[i, i] = 0.5
+        tp[i, i + 1] = 0.5
+        for j in range(i + 2, self._num_states):
+          # tp[i, j] = 1.0 / (self._num_states - i)
+          tp[i, j] = 0.0
+      tp[-1, -1] = 1.0
     if self._hmm_type == 'left-to-right-to-first':
       tp[-1, 0] = 0.5
       tp[-1, -1] = 0.5
