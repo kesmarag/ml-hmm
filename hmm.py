@@ -425,8 +425,10 @@ class HMM(object):
       # update the transition matrix
       # first calculate sum_n=2^{N} xi_mean[n-1,k , n,l]
       sum_xi_mean = tf.squeeze(tf.reduce_sum(xi_mv, axis=0))
-      self._tp_tf_new = tf.transpose(
-        sum_xi_mean / tf.reduce_sum(sum_xi_mean, axis=0))
+      self._tp_tf_new = sum_xi_mean / (tf.reduce_sum(sum_xi_mean,
+                                                     axis=1,
+                                                     keep_dims=True))
+
       # emissions update
       x_t = tf.transpose(self._dataset_tf, perm=[1, 0, 2], name='x_transpose')
       gamma_x = tf.matmul(tf.expand_dims(self._gamma, -1),
