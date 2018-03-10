@@ -69,6 +69,7 @@ Generate simulated data from the model.
 ## instalation using pip:
 
 pip install git+https://github.com/kesmarag/ml-utils.git
+
 pip install git+https://github.com/kesmarag/ml-hmm.git
 
 ## usage
