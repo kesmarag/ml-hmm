@@ -374,7 +374,7 @@ class HMM(object):
       self._cum_tp_tf = tf.cumsum(self._tp_tf, axis=1)
       # initial sample
       _init_sample_state = tf.expand_dims(
-        tf.where(tf.squeeze(self._cum_p0_tf >= self._rand[0]))[0], 0)
+        tf.where(tf.squeeze(self._cum_p0_tf > self._rand[0]))[0], 0)
       _init_sample = tf.expand_dims(self._em_probs.sample()[tf.cast(
         _init_sample_state[0, 0], dtype='int32')], 0)
       i0 = tf.constant(1, dtype='int32')
