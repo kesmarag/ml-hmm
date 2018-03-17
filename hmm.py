@@ -23,7 +23,7 @@ class HMM(object):
       num_states: Number of states.
       data_dim: Dimensionality of the observed data.
       hmm_type: Type of HMM (fully-connected, left-to-right,
-                left-to-right-to-first)
+                cyclic)
     """
     self._dir = tempfile.mkdtemp()
     self._epoch = 0
@@ -512,7 +512,7 @@ class HMM(object):
   def _init_p0_tp(self):
     tp = np.ones([self._num_states, self._num_states], dtype=np.float64) / self._num_states
     p0 = np.ones([1, self._num_states], dtype=np.float64) / self._num_states
-    if self._hmm_type == 'left-to-right' or self._hmm_type == 'left-to-right-to-first':
+    if self._hmm_type == 'left-to-right' or self._hmm_type == 'cyclic':
       p0[0, 0] = 1.0
       for i in range(self._num_states):
         p0[0, i] = 0.0  # 0.1/(self._num_states - 1.0)
@@ -526,7 +526,7 @@ class HMM(object):
           tp[i, j] = 0.0
       tp[-1, -1] = 1.0
       p0[0, 0] = 1.0
-    if self._hmm_type == 'left-to-right-to-first':
+    if self._hmm_type == 'cyclic':
       tp[-1, 0] = 0.5
       tp[-1, -1] = 0.5
       p0 = np.ones([1, self._num_states], dtype=np.float64) / self._num_states
