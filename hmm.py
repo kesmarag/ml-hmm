@@ -52,7 +52,7 @@ class HMM(object):
     frame_len = 35
     s = '-' * frame_len
     s += '\n' + '-' * frame_len + '\n'
-    s += ' - kesmarag.ghmm.GaussianHMM'
+    s += ' - kesmarag.ml.hmm.HMM'
     s += '\n' + '-' * frame_len + '\n'
     s += ' - number of states: ' + str(self._num_states) + '\n'
     s += ' - observation length: ' + str(self._data_dim) + '\n'
@@ -115,22 +115,27 @@ class HMM(object):
     """
     post_max = -1000000000
     tic = time.time()
-    KMEANS_NUM = 100
     dataset = DataSet(data)
-    kmeans = KMeans(n_clusters=self._num_states)
+    KMEANS_NUM = 100
+    kmeans_batch = np.concatenate(dataset.get_batch(
+          min(KMEANS_NUM, dataset.num_examples)), axis=0)
+    if self._hmm_type == 'left-to-right':
+      N = kmeans_batch.shape[-2] // (self._num_states + 1)
+      centers = []
+      for k in range(self._num_states):
+        centers.append(np.mean(kmeans_batch[range(k * N, (k + 1) * N)], axis=-2))
+    else:
+      kmeans = KMeans(n_clusters=self._num_states)
     for r in range(num_runs):
-      # print('run = ', r)
       converged = False
-      kmeans_batch = np.concatenate(dataset.get_batch(
-        min(KMEANS_NUM, dataset.num_examples)), axis=0)
-      kmeans = KMeans(
-        n_clusters=self._num_states, random_state=r).fit(kmeans_batch)
-      self._mu = kmeans.cluster_centers_
-      # print(self._mu)
-      '''self._p0 = np.ones(
-        [1, self._num_states], dtype=np.float64)/self._num_states
-      self._tp = np.ones([self._num_states, self._num_states],
-                         dtype=np.float64)/self._num_states'''
+      if self._hmm_type == 'left-to-right':
+        for i in range(self._num_states):
+          centers[i] = np.multiply(centers[i], 1.0 + 0.05 * (np.random.randn(self._data_dim,)))
+        self._mu = np.array(centers)
+      else:
+        kmeans = KMeans(
+          n_clusters=self._num_states, random_state=r).fit(kmeans_batch)
+        self._mu = kmeans.cluster_centers_
       self._p0, self._tp = self._init_p0_tp()
       self._sigma = np.array(
         [np.identity(self._data_dim, dtype=np.float64)] * self._num_states)
@@ -203,9 +208,8 @@ class HMM(object):
     # print('training time : ', toc-tic, ' seconds.')
     return converged
 
-  # I am not sure that it works properly.
   def run_viterbi(self, data):
-    """Implements the viterbi algorithm. 
+    """Implements the viterbi algorithm.
     (I am not sure that it works properly)
 
     Args:
@@ -225,7 +229,22 @@ class HMM(object):
         self._sigma_tf: self._sigma}
       toc = time.time()
       # print('inference time : ', toc-tic, ' seconds.')
-      return sess.run(self._pstates, feed_dict=feed_dict)
+      w, am = sess.run([self._w, self._am], feed_dict=feed_dict)
+      w = (w[:, -1, :])
+      argmax_w = np.argmax(w, axis=1)
+      psi = np.concatenate((am[range(len(w)), 1::, argmax_w], np.expand_dims(argmax_w, 1)), -1)
+      dec = []
+      for i, p in enumerate(am):
+        dec_p = [argmax_w[i]]
+        c = p[::-1, :]
+        l = argmax_w[i]
+        for j in range(len(c) - 1):
+          # print(c[j][l])
+          dec_p.insert(0, c[j][l])
+          l = c[j][l]
+        dec_p.insert(0, l)
+        dec.append(dec_p)
+      return np.squeeze(np.array(dec, dtype='int16'))
 
   def generate(self, num_samples):
     """Generate simulated data from the model.
@@ -413,8 +432,6 @@ class HMM(object):
 
   def _maximization(self):
     with tf.variable_scope('maximization'):
-      # min_var and max_var to be adjustable
-      # min_var = 0.1
       max_var = 20.0
       gamma_mv = tf.reduce_mean(self._gamma, axis=1, name='gamma_mv')
       # self._gamma_mv = gamma_mv
@@ -427,7 +444,7 @@ class HMM(object):
       sum_xi_mean = tf.squeeze(tf.reduce_sum(xi_mv, axis=0))
       self._tp_tf_new = sum_xi_mean / (tf.reduce_sum(sum_xi_mean,
                                                      axis=1,
-                                                     keep_dims=True))
+                                                     keepdims=True))
 
       # emissions update
       x_t = tf.transpose(self._dataset_tf, perm=[1, 0, 2], name='x_transpose')
@@ -486,12 +503,11 @@ class HMM(object):
       _new_cov_tmp2 = tf.maximum(lowest_c, _new_cov_tmp)
       self._sigma_tf_new = tf.minimum(highest_c, _new_cov_tmp2)
 
-  def _viterbi_step(self, n, w):
-    w_tmp = tf.expand_dims(
-      tf.log(self._emissions[:, n]) + tf.expand_dims(
-        tf.reduce_max(
-          w[:, n - 1] + self._emissions[:, n - 1], axis=-1), -1), 1)
-    return [n + 1, tf.concat([w, w_tmp], 1)]
+  def _viterbi_step(self, n, w, am):
+    w_tmp = tf.expand_dims(tf.log(self._emissions[:, n]) + tf.reduce_max(
+          tf.expand_dims(w[:, n - 1], -1) + tf.expand_dims((tf.log(self._tp_tf)), 0) , axis=-2), 1)
+    am_tmp = tf.expand_dims(tf.argmax(tf.expand_dims(w[:, n - 1], -1) + tf.expand_dims((tf.log(self._tp_tf)), 0) , axis=-2), 1)
+    return [n + 1, tf.concat([w, w_tmp], 1), tf.concat([am, am_tmp], 1)]
 
   def _viterbi(self):
     with self._graph.as_default():
@@ -499,12 +515,12 @@ class HMM(object):
       n = tf.shape(self._dataset_tf)[1]
       w1 = tf.expand_dims(
         tf.log(self._p0_tf) + tf.log(self._emissions[:, 0]), 1)
+      am1 = tf.zeros_like(w1, dtype='int64')
       i0 = tf.constant(1)
-      condition_viterbi = lambda i, w: tf.less(i, n)
-      _, self._w = tf.while_loop(
-        condition_viterbi, self._viterbi_step, [i0, w1], shape_invariants=[
-          i0.get_shape(), tf.TensorShape([None, None, self._num_states])])
-      self._pstates = tf.argmax(self._w, -1)
+      condition_viterbi = lambda i, w, am: tf.less(i, n)
+      _, self._w, self._am = tf.while_loop(
+        condition_viterbi, self._viterbi_step, [i0, w1, am1], shape_invariants=[
+          i0.get_shape(), tf.TensorShape([None, None, self._num_states]), tf.TensorShape([None, None, self._num_states])])
 
   def _is_pos_def(self, sigma):
     return np.all(np.linalg.eigvals(sigma) > 0.02)
@@ -515,14 +531,19 @@ class HMM(object):
     if self._hmm_type == 'left-to-right' or self._hmm_type == 'cyclic':
       p0[0, 0] = 1.0
       for i in range(self._num_states):
-        p0[0, i] = 0.0  # 0.1/(self._num_states - 1.0)
+        p0[0, i] = 0.0
         for j in range(i):
           tp[i, j] = 0.0
-        tp[i, i] = 0.5
+        if self._hmm_type == 'left-to-right':
+          tp[i, i] = 0.9
+        else:
+          tp[i, i] = 0.5
         if i < self._num_states - 1:
-          tp[i, i + 1] = 0.5
+          if self._hmm_type == 'left-to-right':
+            tp[i, i + 1] = 0.1
+          else:
+            tp[i, i + 1] = 0.5
         for j in range(i + 2, self._num_states):
-          # tp[i, j] = 1.0 / (self._num_states - i)
           tp[i, j] = 0.0
       tp[-1, -1] = 1.0
       p0[0, 0] = 1.0
