@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='kesmarag-ml-hmm',
-      version='0.0.5',
+      version='0.0.6',
       description='An implementation of the Gaussian Hidden Markov Model on top of TensorFlow',
       author='Costas Smaragdakis',
       author_email='kesmarag@gmail.com',

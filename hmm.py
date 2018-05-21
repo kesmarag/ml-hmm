@@ -122,8 +122,15 @@ class HMM(object):
     if self._hmm_type == 'left-to-right':
       N = kmeans_batch.shape[-2] // (self._num_states + 1)
       centers = []
+      sigmas = []
       for k in range(self._num_states):
         centers.append(np.mean(kmeans_batch[range(k * N, (k + 1) * N)], axis=-2))
+        sigmas.append(np.mean(kmeans_batch[range(k * N, (k + 1) * N)]**2, axis=-2))
+      print(sigmas)
+      self._sigma = np.array(
+        [np.identity(self._data_dim, dtype=np.float64)] * self._num_states)
+      for i in range(self._num_states):
+        self._sigma[i] = np.diag(sigmas[i] * (1.0 + 0.3 * np.abs(np.random.randn(len(sigmas[i]),))) )
     else:
       kmeans = KMeans(n_clusters=self._num_states)
     for r in range(num_runs):
@@ -137,8 +144,9 @@ class HMM(object):
           n_clusters=self._num_states, random_state=r).fit(kmeans_batch)
         self._mu = kmeans.cluster_centers_
       self._p0, self._tp = self._init_p0_tp()
-      self._sigma = np.array(
-        [np.identity(self._data_dim, dtype=np.float64)] * self._num_states)
+      if self._hmm_type != 'left-to-right':
+        self._sigma = np.array(
+          [np.identity(self._data_dim, dtype=np.float64)] * self._num_states)
       with tf.Session(graph=self._graph) as sess:
         sess.run(tf.global_variables_initializer())
         for step in range(max_steps):
