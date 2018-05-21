@@ -125,7 +125,7 @@ class HMM(object):
       sigmas = []
       for k in range(self._num_states):
         centers.append(np.mean(kmeans_batch[range(k * N, (k + 1) * N)], axis=-2))
-        sigmas.append(np.mean(kmeans_batch[range(k * N, (k + 1) * N)]**2, axis=-2))
+        sigmas.append(np.mean(kmeans_batch[range(k * N, (k + 1) * N)]**2, axis=-2) - centers[k]**2)
       # print(sigmas)
       self._sigma = np.array(
         [np.identity(self._data_dim, dtype=np.float64)] * self._num_states)
