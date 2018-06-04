@@ -185,8 +185,8 @@ class HMM(object):
               self._sigma[k] = self._sigma[k] + 0.05 * np.array(
                 [np.identity(self._data_dim, dtype=np.float64)])*self._sigma[k]
               # print('new sigma...')
-          if j > 100:
-            print('j = ', j)
+          # if j > 100:
+          #  print('j = ', j)
           post = np.mean(
             np.squeeze(sess.run(
               self._posterior, feed_dict={
