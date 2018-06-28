@@ -276,7 +276,7 @@ class HMM(object):
   
   def save_model(self, filename):
     if self._epoch > 0:
-      np.savez(filename, p0 = self._p0, mu = self._mu, sigma = self._sigma)
+      np.savez(filename, p0 = self._p0, tp = self._tp, mu = self._mu, sigma = self._sigma)
     else:
       print('Nothing to do. Please train the model first')
 
@@ -284,6 +284,7 @@ class HMM(object):
     if self._epoch == 0:
       z = np.load(filename)
       self._p0 = z['p0']
+      self._tp = z['tp']
       self._mu = z['mu']
       self._sigma = z['sigma']
       self._epoch = 1
