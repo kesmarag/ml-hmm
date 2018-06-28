@@ -273,6 +273,22 @@ class HMM(object):
       states, samples = sess.run(
         [self._states, self._samples], feed_dict=feed_dict)
       return samples, states
+  
+  def save_model(self, filename):
+    if self._epoch > 0:
+      np.savez(filename, p0 = self._p0, mu = self._mu, sigma = self._sigma)
+    else:
+      print('Nothing to do. Please train the model first')
+
+  def load_model(self, filename):
+    if self._epoch == 0:
+      z = np.load(filename)
+      self._p0 = z['p0']
+      self._mu = z['mu']
+      self._sigma = z['sigma']
+      self._epoch = 1
+    else:
+      print('ERROR')
 
   @property
   def p0(self):
