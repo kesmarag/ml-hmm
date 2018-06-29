@@ -90,7 +90,7 @@ class HMM(object):
       each time serie in data.
 
     """
-    dataset = DataSet(data)
+    dataset = DataSet(data, shuffle=False)
     with tf.Session(graph=self._graph) as sess:
       sess.run(tf.global_variables_initializer())
       feed_dict = {
