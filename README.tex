@@ -1,0 +1,118 @@
+HMM
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{HMM(}\VariableTok{self}\NormalTok{, num_states, data_dim)}
+\end{Highlighting}
+\end{Shaded}
+
+A Hidden Markov Models class with Gaussians emission distributions.
+
+fit
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{HMM.fit(}\VariableTok{self}\NormalTok{, data, max_steps}\OperatorTok{=}\DecValTok{100}\NormalTok{, batch_size}\OperatorTok{=}\VariableTok{None}\NormalTok{, TOL}\OperatorTok{=}\FloatTok{0.01}\NormalTok{, min_var}\OperatorTok{=}\FloatTok{0.1}\NormalTok{, num_runs}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Implements the Baum-Welch algorithm.
+
+\begin{verbatim}
+Args:
+  data: A numpy array with rank two or three.
+  max_steps: The maximum number of steps.
+  batch_size: None or the number of batch size.
+  TOL: The tolerance for stoping training process.
+
+Returns:
+  True if converged, False otherwise.
+\end{verbatim}
+
+posterior
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{HMM.posterior(}\VariableTok{self}\NormalTok{, data)}
+\end{Highlighting}
+\end{Shaded}
+
+Runs the forward-backward algorithm in order to calculate the log-scale
+posterior probabilities.
+
+\begin{verbatim}
+Args:
+  data: A numpy array with rank two or three.
+
+Returns:
+  A numpy array that contains the log-scale posterior probabilities of
+  each time serie in data.
+\end{verbatim}
+
+run\_viterbi
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{HMM.run_viterbi(}\VariableTok{self}\NormalTok{, data)}
+\end{Highlighting}
+\end{Shaded}
+
+Implements the viterbi algorithm. (I am not sure that it works properly)
+
+\begin{verbatim}
+Args:
+  data: A numpy array with rank two or three.
+
+Returns:
+  The most probable state path.
+\end{verbatim}
+
+generate
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{HMM.generate(}\VariableTok{self}\NormalTok{, num_samples)}
+\end{Highlighting}
+\end{Shaded}
+
+Generate simulated data from the model.
+
+\begin{verbatim}
+Args:
+  num_samples: The number of samples of the generated data.
+
+Returns:
+  The generated data.
+\end{verbatim}
+
+\hypertarget{installation-using-pip}{%
+\subsection{installation using pip:}\label{installation-using-pip}}
+
+pip install git +https://github.com/kesmarag/ml-utils.git
+
+pip install git+https://github.com/kesmarag/ml-hmm.git
+
+\hypertarget{usage}{%
+\subsection{usage}\label{usage}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ numpy }\ImportTok{as}\NormalTok{ np}
+\ImportTok{from}\NormalTok{ kesmarag.ml.hmm }\ImportTok{import}\NormalTok{ HMM}
+
+\CommentTok{# create a random data set with 3 time series.}
+\NormalTok{data }\OperatorTok{=}\NormalTok{ np.random.randn(}\DecValTok{3}\NormalTok{, }\DecValTok{100}\NormalTok{, }\DecValTok{2}\NormalTok{)}
+
+\CommentTok{# create a model with 10 hidden states.}
+\NormalTok{model }\OperatorTok{=}\NormalTok{ HMM(}\DecValTok{10}\NormalTok{, }\DecValTok{2}\NormalTok{)}
+
+\CommentTok{# fit the model}
+\NormalTok{model.fit(data)}
+
+\CommentTok{# print the trained model}
+\BuiltInTok{print}\NormalTok{(model)}
+
+\CommentTok{# Good luck}
+\end{Highlighting}
+\end{Shaded}
+
