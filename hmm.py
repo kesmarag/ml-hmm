@@ -13,11 +13,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 class HMM(object):
-  """A Hidden Markov Models class with Gaussians emission distributions.
+  """A Hidden Markov Model class with Gaussians emission distributions,
+  on top of Tensorflow machine learning library.
   """
 
   def __init__(self, num_states, data_dim, hmm_type='fully-connected'):
-    """Init method for the HiddenMarkovModel class.
+    """Init method for the HMM class.
 
     Args:
       num_states: Number of states.
@@ -105,9 +106,9 @@ class HMM(object):
 
     Args:
       data: A numpy array with rank two or three.
-      max_steps: The maximum number of steps.
+      max_steps: Maximum number of steps.
       batch_size: None or the number of batch size.
-      TOL: The tolerance for stoping training process.
+      TOL: The tolerance for stoping the training process.
 
     Returns:
       True if converged, False otherwise.
