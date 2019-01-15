@@ -13,18 +13,19 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 class HMM(object):
-  """A Hidden Markov Model class with Gaussians emission distributions,
-  on top of Tensorflow machine learning library.
+  """A Hidden Markov Model class on top of the Tensorflow library.
+     At the moment, the class supports only Gaussian emission distributions.
+     The class will also support discrete multivariate and Gaussian Mixture Models
+     as emission distributions. 
+     The class is licensed under the MIT License.
   """
 
   def __init__(self, num_states, data_dim, hmm_type='fully-connected'):
-    """Init method for the HMM class.
-
+    """Init method of the HMM class.
     Args:
-      num_states: Number of states.
+      num_states: Number of the hidden states.
       data_dim: Dimensionality of the observed data.
-      hmm_type: Type of HMM (fully-connected, left-to-right,
-                cyclic)
+      hmm_type: Type of HMM (fully-connected, left-to-right, cyclic).
     """
     self._dir = tempfile.mkdtemp()
     self._epoch = 0
@@ -34,10 +35,6 @@ class HMM(object):
     self._hmm_type = hmm_type
     self._em_probs = self._emission_probs_family()
     # numpy variables
-    '''    self._p0 = np.ones(
-      [1, self._num_states], dtype=np.float64)/self._num_states
-    self._tp = np.ones([self._num_states, self._num_states],
-                       dtype=np.float64)/self._num_states'''
     self._p0, self._tp = self._init_p0_tp()
     self._mu = np.random.rand(self._num_states, self._data_dim)
     self._sigma = np.array(
@@ -102,13 +99,16 @@ class HMM(object):
 
   def fit(self, data, max_steps=100, batch_size=None, TOL=0.01, min_var=0.1,
           num_runs=1):
-    """Implements the Baum-Welch algorithm.
+    """Implements the Baum-Welch fitting algorithm.
 
     Args:
-      data: A numpy array with rank two or three.
+      data: A numpy array with rank two or three.             
       max_steps: Maximum number of steps.
       batch_size: None or the number of batch size.
       TOL: The tolerance for stoping the training process.
+      min_var: Minimum variance
+      num_runs: Number of training realizations. 
+      The best of all model is to be kept.
 
     Returns:
       True if converged, False otherwise.
@@ -185,9 +185,6 @@ class HMM(object):
               # print('.. not positive definite ..')
               self._sigma[k] = self._sigma[k] + 0.05 * np.array(
                 [np.identity(self._data_dim, dtype=np.float64)])*self._sigma[k]
-              # print('new sigma...')
-          # if j > 100:
-          #  print('j = ', j)
           post = np.mean(
             np.squeeze(sess.run(
               self._posterior, feed_dict={
@@ -218,15 +215,13 @@ class HMM(object):
     return converged
 
   def run_viterbi(self, data):
-    """Implements the viterbi algorithm.
-    (I am not sure that it works properly)
+    """Implements the viterbi decoding algorithm.
 
     Args:
-      data: A numpy array with rank two or three.
+      data: A numpy array of rank two or three represents the observed data.
 
     Returns:
-      The most probable state path.
-
+      A numpy array contains he most probable hidden state paths.
     """
     dataset = DataSet(data)
     tic = time.time()
@@ -262,8 +257,7 @@ class HMM(object):
       num_samples: The number of samples of the generated data.
 
     Returns:
-      The generated data.
-
+      The numpy array of the generated sequence of observations.
     """
     with tf.Session(graph=self._graph) as sess:
       sess.run(tf.global_variables_initializer())
@@ -276,12 +270,22 @@ class HMM(object):
       return samples, states
   
   def save_model(self, filename):
+    """Saves the model parameters to a numpy file
+    
+    Args:
+      filename: The path to a numppy .npz file where the model parameters will be saved.
+    """
     if self._epoch > 0:
       np.savez(filename, p0 = self._p0, tp = self._tp, mu = self._mu, sigma = self._sigma)
     else:
-      print('Nothing to do. Please train the model first')
+      print('Nothing to do. The model must have been trained first in order to run this method')
 
   def load_model(self, filename):
+    """Loads the model parameters from a numpy file
+    
+    Args:
+      filename: The path to a numpy .npz file where the model parameters have been stored.
+    """
     if self._epoch == 0:
       z = np.load(filename)
       self._p0 = z['p0']
@@ -290,7 +294,7 @@ class HMM(object):
       self._sigma = z['sigma']
       self._epoch = 1
     else:
-      print('ERROR')
+      print('ERROR: The model parameters did not load properly')
 
   @property
   def p0(self):
